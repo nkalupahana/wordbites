@@ -91,7 +91,7 @@ impl Trie {
     }
     
     pub fn is_prefix(&self, word: &str) -> bool {
-        if (word.chars().count() == 0 && self.word_count() == 0) {
+        if word.chars().count() == 0 && self.word_count() == 0 {
             return false;
         }
         
