@@ -82,6 +82,18 @@ pub struct Trie {
 }
 
 impl Trie {
+    pub fn new() -> Trie {
+        let trie = Trie {
+            head: TrieNode {
+                letter: ' ',
+                end_of_word: false,
+                nodes: Default::default() // array of None
+            }
+        };
+
+        trie
+    }
+
     pub fn insert(&mut self, word: &str) {
         return self.head.insert(&word);
     }

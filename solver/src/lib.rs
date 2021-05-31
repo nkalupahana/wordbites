@@ -1,6 +1,6 @@
 mod trie;
 mod data;
-use trie::{Trie, TrieNode};
+use trie::Trie;
 use data::SCRABBLE_DICTIONARY;
 use std::collections::BTreeSet;
 use wasm_bindgen::prelude::*;
@@ -72,34 +72,13 @@ fn find_words(direction: SolveDirection, legal_words: &Trie, found_words: &mut T
 
 #[wasm_bindgen]
 pub fn run(letters: &str) -> String {
-    // Create Trie
-    let mut legal_words = Trie {
-        head: TrieNode {
-            letter: ' ',
-            end_of_word: false,
-            nodes: Default::default() // array of None
-        }
-    };
-
+    // Create Trie with scrabble dictionary
+    let mut legal_words = Trie::new();
     read_dict(&mut legal_words);
-    println!("{}", legal_words.word_count());
     
-    let mut found_words_horiz = Trie {
-        head: TrieNode {
-            letter: ' ',
-            end_of_word: false,
-            nodes: Default::default() // array of None
-        }
-    };
-
-    let mut found_words_vert = Trie {
-        head: TrieNode {
-            letter: ' ',
-            end_of_word: false,
-            nodes: Default::default() // array of None
-        }
-    };
-
+    // Find words
+    let mut found_words_horiz = Trie::new();
+    let mut found_words_vert = Trie::new();
     let mut word_set: BTreeSet<String> = BTreeSet::new();
     find_words(SolveDirection::Horizontal, &legal_words, &mut found_words_horiz, &mut word_set, "", letters);
     find_words(SolveDirection::Vertical, &legal_words, &mut found_words_vert, &mut word_set, "", letters);
