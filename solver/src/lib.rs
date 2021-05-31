@@ -18,48 +18,52 @@ fn read_dict(trie: &mut Trie){
 }
 
 fn find_words(direction: SolveDirection, legal_words: &Trie, found_words: &mut Trie, word_set: &mut BTreeSet<String>, prefix: &str, remaining_letters: &str) {
+    // If not a prefix of a word, don't explore any further
     if !legal_words.is_prefix(prefix) {
         return;
     }
 
+    // If we've already found this word, don't explore any further
     if found_words.is_prefix(prefix) {
         return;
     }
 
+    // If this is a word and it's longer than 3 characters, insert it
     if legal_words.is_word(prefix) && prefix.len() >= 3 {
         found_words.insert(prefix);
         word_set.insert(String::from(prefix));
     }
 
-    let remaining_letters_string = String::from(remaining_letters);
-    let vec: Vec<&str> = remaining_letters_string.split(",").collect();
-    for (i, &_item) in vec.iter().enumerate() {
-        let mut tvec: Vec<&str> = remaining_letters_string.split(",").collect();
-        tvec.remove(i);
-        let letter_removed = tvec.join(",");
-        if vec[i].chars().count() == 1 {
-            find_words(direction, legal_words, found_words, word_set, &(String::from(prefix) + vec[i]), &letter_removed);
+    // For each letter we have left to explore,
+    let tmp_rem_let = String::from(remaining_letters);
+    let rl_vec: Vec<&str> = tmp_rem_let.split(",").collect();
+    for (i, &_item) in rl_vec.iter().enumerate() {
+        // Remove it from the letters remaining and explore it recursively
+        let mut tvec: Vec<&str> = rl_vec.clone();
+        let letter = tvec.remove(i);
+        let newstr = tvec.join(",");
+        if letter.chars().count() == 1 {
+            find_words(direction, legal_words, found_words, word_set, &(String::from(prefix) + letter), &newstr);
         } else {
+            // If this is a 2x1 or 1x2 block, explore it based on the SolveDirection
+            let mut solve_strategy = ["", ""];
             match direction {
                 SolveDirection::Horizontal => {
-                    if vec[i].contains("-") {
-                        find_words(direction, legal_words, found_words, word_set, &(String::from(prefix) + &vec[i].split("-").collect::<Vec<&str>>().join("")), &letter_removed);
-                    } else if vec[i].contains("|") {
-                        let letters: Vec<&str> = vec[i].split("|").collect();
-                        for letter in &letters {
-                            find_words(direction, legal_words, found_words, word_set, &(String::from(prefix) + letter), &letter_removed);
-                        }
-                    }
+                    solve_strategy[0] = "-";
+                    solve_strategy[1] = "|";
                 },
                 SolveDirection::Vertical => {
-                    if vec[i].contains("|") {
-                        find_words(direction, legal_words, found_words, word_set, &(String::from(prefix) + &vec[i].split("|").collect::<Vec<&str>>().join("")), &letter_removed);
-                    } else if vec[i].contains("-") {
-                        let letters: Vec<&str> = vec[i].split("-").collect();
-                        for letter in &letters {
-                            find_words(direction, legal_words, found_words, word_set, &(String::from(prefix) + letter), &letter_removed);
-                        }
-                    }
+                    solve_strategy[0] = "|";
+                    solve_strategy[1] = "-";
+                }
+            }
+            
+            if letter.contains(solve_strategy[0]) {
+                find_words(direction, legal_words, found_words, word_set, &(String::from(prefix) + &letter.split(solve_strategy[0]).collect::<Vec<&str>>().join("")), &newstr);
+            } else if letter.contains(solve_strategy[1]) {
+                let letters: Vec<&str> = letter.split(solve_strategy[1]).collect();
+                for letter in &letters {
+                    find_words(direction, legal_words, found_words, word_set, &(String::from(prefix) + letter), &newstr);
                 }
             }
         }
