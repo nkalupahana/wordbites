@@ -1,7 +1,7 @@
 mod trie;
-mod data;
+mod dictionary;
 use trie::Trie;
-use data::SCRABBLE_DICTIONARY;
+use dictionary::SCRABBLE_DICTIONARY;
 use std::collections::BTreeSet;
 use wasm_bindgen::prelude::*;
 
@@ -83,11 +83,10 @@ pub fn run(letters: &str) -> String {
     find_words(SolveDirection::Horizontal, &legal_words, &mut found_words_horiz, &mut word_set, "", letters);
     find_words(SolveDirection::Vertical, &legal_words, &mut found_words_vert, &mut word_set, "", letters);
 
+    // TreeSet -> Vec -> String, and return
     let mut word_vect: Vec<String> = Vec::with_capacity(word_set.len());
     for word in &word_set {
         word_vect.push(word.to_string());
     } 
-
-    word_vect.sort_by(|a, b| b.chars().count().cmp(&a.chars().count()));
     return String::from(word_vect.join(","))
 }
