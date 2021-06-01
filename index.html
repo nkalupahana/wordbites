@@ -4,6 +4,7 @@
     <title>Word Bites Solver</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://unpkg.com/vue@next"></script>
     <style>
         .material-icons {
             font-size: 28px;
@@ -21,7 +22,7 @@
 <body>
     <div class="container">
         <br>
-        <h3 class="title is-4">GamePigeon Word Bites Solver</h3>
+        <h4 class="title is-4">GamePigeon Word Bites Solver</h4>
         <p>Enter ONLY LETTERS -- without any commas or other separating characters.</p>
         <br>
         
@@ -56,15 +57,38 @@
             </p>
         </div>
         <button id="solve" class="button is-primary">Solve!</button>
+        <br><br><br>
+        <div id="words" style="width: 90%;">
+            <div v-if="words != {}">
+                <div v-for="key in Object.keys(words).sort().reverse()">
+                    <p class="title is-5" style="margin-bottom: 4px;">{{ key }} Letters</p>
+                    <p style="margin-bottom: 24px;">{{ words[key].join(", ") }}</p>
+                </div>
+            </div>
+        </div>
+        <br><br><br>
     </div>
     <script type="module">
+        let app = Vue.createApp({
+            data() {
+                return {
+                    set: false,
+                    words: {}
+                }
+            }
+        }).mount('#words');
         import init, {run} from "./solver/pkg/wordbites.js";
         init().then(() => {
             document.getElementById("solve").addEventListener("click", () => {
-                let letters = document.getElementById("single").value.split("");
-                letters = letters.concat(document.getElementById("horiz").value.match(/.{2}/g).map(val => val.split("").join("-")));
-                letters = letters.concat(document.getElementById("vert").value.match(/.{2}/g).map(val => val.split("").join("|")));
-                console.log(run(letters.join(",")));
+                let letters = document.getElementById("single").value.trim().split("");
+                letters = letters.concat(document.getElementById("horiz").value.trim().match(/.{2}/g).map(val => val.split("").join("-")));
+                letters = letters.concat(document.getElementById("vert").value.trim().match(/.{2}/g).map(val => val.split("").join("|")));
+                app.words = {};
+                const words = run(letters.join(",")).split(",");
+                for (let word of words) {
+                    if (!app.words[word.length]) app.words[word.length] = [];
+                    app.words[word.length].push(word);
+                }
             });
         });
     </script>
