@@ -17,77 +17,145 @@
         .container {
             padding-left: 30px;
         }
+
+        .flex {
+            flex-direction: row;
+            display: flex;
+            height: 220px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .letter {
+            margin: 3px;
+            width: 75px;
+            height: 75px;
+            background-color: #e09c08;
+            font-family: Helvetica;
+            text-align: center;
+            font-size: 62px;
+            border-radius: 6px;
+            line-height: 1.15;
+        }
+
+        .horizontal {
+            width: 125px;
+        }
+
+        .vertical {
+            height: 145px;
+        }
+
+        .pos0 {
+            align-self: flex-end;
+        }
+
+        .pos1 {
+            align-self: flex-start;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <br>
-        <h4 class="title is-4">GamePigeon Word Bites Solver</h4>
-        <p>Enter ONLY LETTERS -- without any commas or other separating characters.</p>
-        <br>
-        
-        <div class="field">
-            <p class="control has-icons-left">
-                <input id="single" class="input" type="text" placeholder="Single Letters">
-                <span class="icon is-medium is-left">
-                    <span class="material-icons">
-                        font_download
+    <div id="app">
+        <div class="container" v-if="words.length == 0">
+            <br>
+            <h4 class="title is-4">GamePigeon Word Bites Solver</h4>
+            <p>Enter ONLY LETTERS -- without any commas or other separating characters.</p>
+            <br>
+            
+            <div class="field">
+                <p class="control has-icons-left">
+                    <input id="single" class="input" type="text" placeholder="Single Letters">
+                    <span class="icon is-medium is-left">
+                        <span class="material-icons">
+                            font_download
+                        </span>
                     </span>
-                </span>
-            </p>
-        </div>
-        <div class="field">
-            <p class="control has-icons-left">
-                <input id="horiz" class="input" type="text" placeholder="Horizontal Boxes">
-                <span class="icon is-medium is-left">
-                    <span class="material-icons">
-                        crop_16_9
-                    </span>
-                </span>
-            </p>
-        </div>
-        <div class="field">
-            <p class="control has-icons-left">
-                <input id="vert" class="input" type="text" placeholder="Vertical Boxes">
-                <span class="icon is-medium is-left">
-                    <span class="material-icons">
-                        crop_portrait
-                    </span>
-                </span>
-            </p>
-        </div>
-        <button id="solve" class="button is-primary">Solve!</button>
-        <br><br><br>
-        <div id="words" style="width: 90%;">
-            <div v-if="words != {}">
-                <div v-for="key in Object.keys(words).sort().reverse()">
-                    <p class="title is-5" style="margin-bottom: 4px;">{{ key }} Letters</p>
-                    <p style="margin-bottom: 24px;">{{ words[key].join(", ") }}</p>
-                </div>
+                </p>
             </div>
+            <div class="field">
+                <p class="control has-icons-left">
+                    <input id="horiz" class="input" type="text" placeholder="Horizontal Boxes">
+                    <span class="icon is-medium is-left">
+                        <span class="material-icons">
+                            crop_16_9
+                        </span>
+                    </span>
+                </p>
+            </div>
+            <div class="field">
+                <p class="control has-icons-left">
+                    <input id="vert" class="input" type="text" placeholder="Vertical Boxes">
+                    <span class="icon is-medium is-left">
+                        <span class="material-icons">
+                            crop_portrait
+                        </span>
+                    </span>
+                </p>
+            </div>
+            <button id="solve" class="button is-primary">Solve!</button>
         </div>
-        <br><br><br>
+        <div v-else>
+            <br><br><br>
+            <center class="title is-2">{{ current.word }}</center>
+            <br><br>
+            <div class="flex">
+                <div v-for="letter in current.combination" :class="letterClass(letter)">{{ letter.letters[0].toUpperCase() }} {{ letter.letters[1].toUpperCase() }}</div>
+            </div>
+            <br><br><br>
+            <center>
+                Press Space to go the next word, or refresh to do a new puzzle.
+            </center>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/gh/gf3/Levenshtein@master/lib/levenshtein.js"></script>
     <script type="module">
         let app = Vue.createApp({
             data() {
                 return {
-                    set: false,
-                    words: {}
+                    current: {},
+                    words: []
+                }
+            },
+            methods: {
+                letterClass(letter) {
+                    if (letter.ltype == "Single") {
+                        return "letter";
+                    } else if (letter.ltype == "Horizontal") {
+                        return "letter horizontal";
+                    } else if (letter.ltype == "Vertical") {
+                        return "letter vertical pos" + letter.pos;
+                    }
                 }
             }
-        }).mount('#words');
+        }).mount('#app');
         import init, {run} from "./solver/pkg/wordbites.js";
         init().then(() => {
             document.getElementById("solve").addEventListener("click", () => {
                 let letters = document.getElementById("single").value.trim().split("");
                 letters = letters.concat(document.getElementById("horiz").value.trim().match(/.{2}/g).map(val => val.split("").join("-")));
                 letters = letters.concat(document.getElementById("vert").value.trim().match(/.{2}/g).map(val => val.split("").join("|")));
-                app.words = {};
-                const words = run(letters.join(",")).split(",");
-                for (let word of words) {
-                    if (!app.words[word.length]) app.words[word.length] = [];
-                    app.words[word.length].push(word);
+                console.log(letters.join(","));
+                console.log(run(letters.join(",")));
+                app.words = run(letters.join(","));
+                app.current = app.words.shift();
+                console.log(app);
+            });
+
+            document.addEventListener("keydown", e => {
+                if (e.code == "Space" && app.words.length > 0) {
+                    let idx = 0;
+                    let lvn = new Levenshtein(app.current.word, app.words[0].word);
+                    for (let i = 1; i < app.words.length; ++i) {
+                        const testlvn = new Levenshtein(app.current.word, app.words[i].word);
+                        if (testlvn.distance < lvn.distance) {
+                            lvn = testlvn;
+                            idx = i;
+                        }
+                    }
+
+                    const newCurrent = app.words.splice(idx, 1);
+                    app.current = newCurrent[0];
                 }
             });
         });
