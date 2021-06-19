@@ -57,7 +57,7 @@
 </head>
 <body>
     <div id="app">
-        <div class="container" v-if="words.length == 0">
+        <div class="container" v-if="Object.keys(current).length == 0">
             <br>
             <h4 class="title is-4">GamePigeon Word Bites Solver</h4>
             <p>Enter ONLY LETTERS -- without any commas or other separating characters.</p>
@@ -140,23 +140,26 @@
                 app.words = run(letters.join(","));
                 app.current = app.words.shift();
                 console.log(app);
-            });
+                document.addEventListener("keydown", e => {
+                    if (e.code == "Space") {
+                        if (app.words.length > 0) {
+                            let idx = 0;
+                            let lvn = new Levenshtein(app.current.levinword, app.words[0].levinword);
+                            for (let i = 1; i < app.words.length; ++i) {
+                                const testlvn = new Levenshtein(app.current.levinword, app.words[i].levinword);
+                                if (testlvn.distance < lvn.distance) {
+                                    lvn = testlvn;
+                                    idx = i;
+                                }
+                            }
 
-            document.addEventListener("keydown", e => {
-                if (e.code == "Space" && app.words.length > 0) {
-                    let idx = 0;
-                    let lvn = new Levenshtein(app.current.word, app.words[0].word);
-                    for (let i = 1; i < app.words.length; ++i) {
-                        const testlvn = new Levenshtein(app.current.word, app.words[i].word);
-                        if (testlvn.distance < lvn.distance) {
-                            lvn = testlvn;
-                            idx = i;
+                            const newCurrent = app.words.splice(idx, 1);
+                            app.current = newCurrent[0];
+                        } else {
+                            window.location.reload();
                         }
                     }
-
-                    const newCurrent = app.words.splice(idx, 1);
-                    app.current = newCurrent[0];
-                }
+                });
             });
         });
     </script>
