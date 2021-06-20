@@ -104,7 +104,7 @@
             </div>
             <br><br><br>
             <center>
-                Press Space to go the next word, or refresh to do a new puzzle.
+                <a id="clickToNext">Press Space or click here to go the next word</a>, or refresh to do a new puzzle.
             </center>
         </div>
     </div>
@@ -129,12 +129,32 @@
                 }
             }
         }).mount('#app');
+
+        const nextWord = () => {
+            if (app.words.length > 0) {
+                let idx = 0;
+                let lvn = new Levenshtein(app.current.levinword, app.words[0].levinword);
+                for (let i = 1; i < app.words.length; ++i) {
+                    const testlvn = new Levenshtein(app.current.levinword, app.words[i].levinword);
+                    if (testlvn.distance < lvn.distance) {
+                        lvn = testlvn;
+                        idx = i;
+                    }
+                }
+
+                const newCurrent = app.words.splice(idx, 1);
+                app.current = newCurrent[0];
+            } else {
+                window.location.reload();
+            }
+        }
+
         import init, {run} from "./solver/pkg/wordbites.js";
         init().then(() => {
             document.getElementById("solve").addEventListener("click", () => {
-                let letters = document.getElementById("single").value.trim().split("");
-                letters = letters.concat(document.getElementById("horiz").value.trim().match(/.{2}/g).map(val => val.split("").join("-")));
-                letters = letters.concat(document.getElementById("vert").value.trim().match(/.{2}/g).map(val => val.split("").join("|")));
+                let letters = document.getElementById("single").value.toLowerCase().trim().split("");
+                letters = letters.concat(document.getElementById("horiz").value.toLowerCase().trim().match(/.{2}/g).map(val => val.split("").join("-")));
+                letters = letters.concat(document.getElementById("vert").value.toLowerCase().trim().match(/.{2}/g).map(val => val.split("").join("|")));
                 console.log(letters.join(","));
                 console.log(run(letters.join(",")));
                 app.words = run(letters.join(","));
@@ -142,23 +162,12 @@
                 console.log(app);
                 document.addEventListener("keydown", e => {
                     if (e.code == "Space") {
-                        if (app.words.length > 0) {
-                            let idx = 0;
-                            let lvn = new Levenshtein(app.current.levinword, app.words[0].levinword);
-                            for (let i = 1; i < app.words.length; ++i) {
-                                const testlvn = new Levenshtein(app.current.levinword, app.words[i].levinword);
-                                if (testlvn.distance < lvn.distance) {
-                                    lvn = testlvn;
-                                    idx = i;
-                                }
-                            }
-
-                            const newCurrent = app.words.splice(idx, 1);
-                            app.current = newCurrent[0];
-                        } else {
-                            window.location.reload();
-                        }
+                        nextWord();
                     }
+                });
+
+                app.$nextTick(() => {
+                    document.getElementById("clickToNext").addEventListener("click", nextWord);
                 });
             });
         });
