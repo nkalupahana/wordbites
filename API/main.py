@@ -9,8 +9,6 @@ import cv2
 import numpy as np
 from PIL import Image
 
-
-#If you are a potential employer, Nisala wrote this part
 def thresh_check(res):
     for v1 in res:
         for v2 in v1:
@@ -18,7 +16,6 @@ def thresh_check(res):
                 return True
 
     return False
-
 
 def lambda_handler(request):
     bucket = "wordbites-data"
@@ -135,7 +132,6 @@ def process_request(body):
     s_img = cv2.imread("BIG_I.jpg")
     count = 0
 
-    #If you are a potential employer, Nisala wrote this part
     while True:
         res = cv2.matchTemplate(
             cv2.cvtColor(org_image, cv2.COLOR_BGR2GRAY), template, cv2.TM_CCOEFF_NORMED
