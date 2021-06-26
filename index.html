@@ -93,6 +93,25 @@
                     </span>
                 </p>
             </div>
+            <div class="file" v-if="nofile">
+                <label class="file-label">
+                    <input class="file-input" type="file" name="image" id="fileinput">
+                    <span class="file-cta">
+                        <span class="file-icon">
+                            <span class="material-icons">
+                                file_upload
+                            </span>
+                        </span>
+                        <span class="file-label">
+                            Or select a game screenshot
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <div v-else>
+                <progress class="progress is-small is-primary input" max="100">15%</progress>
+            </div>
+            <br>
             <button id="solve" class="button is-primary">Solve!</button>
         </div>
         <div v-else>
@@ -110,11 +129,27 @@
     </div>
     <script src="https://cdn.jsdelivr.net/gh/gf3/Levenshtein@master/lib/levenshtein.js"></script>
     <script type="module">
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
+                    if ((encoded.length % 4) > 0) {
+                        encoded += '='.repeat(4 - (encoded.length % 4));
+                    }
+                    resolve(encoded);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
         let app = Vue.createApp({
             data() {
                 return {
                     current: {},
-                    words: []
+                    words: [],
+                    nofile: true
                 }
             },
             methods: {
@@ -169,6 +204,20 @@
                 app.$nextTick(() => {
                     document.getElementById("clickToNext").addEventListener("click", nextWord);
                 });
+            });
+
+            document.getElementById("fileinput").addEventListener("change", async () => {
+                app.nofile = false;
+                const data = await getBase64(document.getElementById("fileinput").files[0]);
+                const res = await fetch("https://us-central1-wordbites.cloudfunctions.net/wordbites-2", {
+                    method: "POST",
+                    body: data,
+                });
+                const rd = await res.json();
+                document.getElementById("single").value = rd["single"].join("");
+                document.getElementById("horiz").value = rd["wide"].join("");
+                document.getElementById("vert").value = rd["tall"].join("");
+                document.getElementById("solve").click();
             });
         });
     </script>
