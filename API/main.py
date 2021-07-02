@@ -112,10 +112,24 @@ def lambda_handler(request):
     stexts = [text.replace(" ", "") for text in stexts]
     wtexts = [text.replace(" ", "") for text in wtexts]
     htexts = [text.replace(" ", "") for text in htexts]
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"single": stexts, "tall": htexts, "wide": wtexts}),
+
+
+    if request.method == 'OPTIONS':
+        # Allows GET requests from any origin with the Content-Type
+        # header and caches preflight response for an 3600s
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Max-Age': '3600'
+        }
+
+        return ('', 204, headers)
+    headers = {
+        'Access-Control-Allow-Origin': '*',
     }
+
+    return ({"single": stexts, "tall": htexts, "wide": wtexts}, 200, headers)
 
 def process_request(body):
 
